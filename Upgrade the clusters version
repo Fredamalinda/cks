@@ -1,0 +1,32 @@
+Given a existing Kubernetes cluster running version 1.26.0, upgrade the master node and worker node to version 1.27.0.
+Be sure to drain the master and worker node before upgrading it and uncordon it after the upgrade.
+
+k get nodes
+k drain controlplane --ignore-daemonsets
+ssh controlplane
+sudo -i
+apt-mark unhold kubeadm
+apt-get update
+apt-get install kubeadm=1.27.0-00
+apt-mark hold kubeadm
+kubeadm upgrade apply v1.27.0
+apt-get install kubelet=1.27.0-00
+systemctl restart kubelet
+exit
+exit
+k get nodes
+k uncordon controlplane
+
+
+k drain node01 --ignore-daemonsets
+ssh node01
+sudo -i
+apt-get update
+apt-get install kubeadm=1.27.0-00
+kubeadm upgrade node01
+apt-get install kubelet=1.27.0-00
+systemctl restart kubelet
+exit
+exit
+k get nodes
+k uncordon node01 
