@@ -1,0 +1,109 @@
+This is in addition to the KodeKloud course for CKA
+12 day structure. posted when completed for review.
+
+Day 1: Kubernetes Fundamentals
+
+Goals for Today
+	1.	Understand Kubernetes architecture and core components.
+	2.	Practice essential kubectl commands.
+	3.	Create, inspect, and delete pods using YAML manifests.
+
+Step 1: Set Up Your Environment
+
+Choose a Kubernetes setup:
+	•	Option 1: Use minikube.
+
+minikube start
+
+
+	•	Option 2: Use kind (Kubernetes in Docker).
+
+kind create cluster --name cka-cluster
+
+
+	•	Confirm the cluster is running:
+
+kubectl get nodes
+
+Step 2: Learn Kubernetes Architecture
+
+Core Components:
+	•	Master Node Components: API server, etcd, scheduler, controller-manager
+	•	Worker Node Components: kubelet, kube-proxy
+
+Spend 20-30 minutes reviewing the official documentation:
+Kubernetes Components
+
+Step 3: Practice kubectl Basics
+	1.	List all nodes:
+
+kubectl get nodes
+
+
+	2.	View cluster info:
+
+kubectl cluster-info
+
+
+	3.	Inspect namespaces:
+
+kubectl get namespaces
+
+
+	4.	Explore pods (even if none exist yet):
+
+kubectl get pods --all-namespaces
+
+Step 4: Create Your First Pod
+	1.	Write a Pod YAML Manifest:
+Save the following YAML file as nginx-pod.yaml:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    app: web
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    ports:
+    - containerPort: 80
+
+
+	2.	Apply the Manifest:
+
+kubectl apply -f nginx-pod.yaml
+
+
+	3.	Verify the Pod is Running:
+
+kubectl get pods
+kubectl describe pod nginx
+
+
+	4.	Access the Pod Logs:
+
+kubectl logs nginx
+
+Step 5: Clean Up
+	1.	Delete the Pod:
+
+kubectl delete -f nginx-pod.yaml
+
+
+	2.	Confirm deletion:
+
+kubectl get pods
+
+Day 1 Checklist
+
+✅ Cluster is up and running.
+✅ Practiced kubectl basics.
+✅ Created, inspected, and deleted a Pod using a YAML manifest.
+
+Let me know how it goes or if you encounter any issues!
+
+--------
+
