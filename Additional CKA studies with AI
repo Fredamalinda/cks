@@ -107,3 +107,218 @@ Let me know how it goes or if you encounter any issues!
 
 --------
 
+Day 2: Workloads and Scheduling
+
+Goals for Today
+	1.	Understand and work with ReplicaSets, Deployments, and DaemonSets.
+	2.	Learn how to use node affinity and taints/tolerations for scheduling.
+	3.	Practice scaling workloads.
+
+Step 1: ReplicaSets
+	1.	Create a ReplicaSet YAML Manifest:
+Save the following YAML file as nginx-replicaset.yaml:
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: nginx-replicaset
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+
+	2.	Apply the ReplicaSet:
+
+kubectl apply -f nginx-replicaset.yaml
+
+
+	3.	Verify ReplicaSet Status:
+
+kubectl get replicaset
+kubectl get pods
+
+
+	4.	Scale the ReplicaSet:
+
+kubectl scale replicaset nginx-replicaset --replicas=5
+kubectl get pods
+
+
+	5.	Clean Up:
+
+kubectl delete -f nginx-replicaset.yaml
+
+Step 2: Deployments
+	1.	Create a Deployment YAML Manifest:
+Save the following YAML file as nginx-deployment.yaml:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+
+	2.	Apply the Deployment:
+
+kubectl apply -f nginx-deployment.yaml
+
+
+	3.	Update the Deployment:
+Update the nginx-deployment.yaml file to use nginx:1.23.2 and apply the changes:
+
+kubectl apply -f nginx-deployment.yaml
+kubectl rollout status deployment/nginx-deployment
+
+
+	4.	Rollback the Deployment:
+
+kubectl rollout undo deployment/nginx-deployment
+kubectl describe deployment nginx-deployment
+
+
+	5.	Clean Up:
+
+kubectl delete -f nginx-deployment.yaml
+
+Step 3: DaemonSets
+	1.	Create a DaemonSet YAML Manifest:
+Save the following YAML file as nginx-daemonset.yaml:
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nginx-daemonset
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+
+	2.	Apply the DaemonSet:
+
+kubectl apply -f nginx-daemonset.yaml
+kubectl get pods -o wide
+
+
+	3.	Clean Up:
+
+kubectl delete -f nginx-daemonset.yaml
+
+Step 4: Node Affinity
+	1.	Add a Label to a Node:
+
+kubectl label node <node-name> environment=production
+
+
+	2.	Create a Pod with Node Affinity:
+Save the following YAML as nginx-affinity.yaml:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-affinity
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: environment
+            operator: In
+            values:
+            - production
+  containers:
+  - name: nginx
+    image: nginx:latest
+
+
+	3.	Apply and Verify:
+
+kubectl apply -f nginx-affinity.yaml
+kubectl get pods -o wide
+
+
+	4.	Clean Up:
+
+kubectl delete -f nginx-affinity.yaml
+kubectl label node <node-name> environment-
+
+Step 5: Taints and Tolerations
+	1.	Add a Taint to a Node:
+
+kubectl taint nodes <node-name> key=value:NoSchedule
+
+
+	2.	Create a Pod with a Toleration:
+Save the following YAML as nginx-toleration.yaml:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-toleration
+spec:
+  tolerations:
+  - key: "key"
+    operator: "Equal"
+    value: "value"
+    effect: "NoSchedule"
+  containers:
+  - name: nginx
+    image: nginx:latest
+
+
+	3.	Apply and Verify:
+
+kubectl apply -f nginx-toleration.yaml
+kubectl get pods -o wide
+
+
+	4.	Clean Up:
+
+kubectl delete -f nginx-toleration.yaml
+kubectl taint nodes <node-name> key-
+
+Day 2 Checklist
+
+✅ Created and managed ReplicaSets, Deployments, and DaemonSets.
+✅ Practiced scaling and updating workloads.
+✅ Worked with node affinity and taints/tolerations.
+
+Let me know how it goes! 🚀
