@@ -534,3 +534,186 @@ Day 3 Checklist
 Let me know how you did and if you’re ready for Day 4!
 
 --------------------
+
+Day 4: Volumes, Persistent Volumes, and Secrets
+
+Goals for Today
+	1.	Understand and work with Volumes and PersistentVolumes.
+	2.	Use PersistentVolumeClaims (PVC) to dynamically provision storage.
+	3.	Learn about Kubernetes Secrets and use them in workloads.
+
+Step 1: Working with Volumes
+	1.	Create a Pod with a Volume:
+Save the following YAML as nginx-volume-pod.yaml:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-volume-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    volumeMounts:
+    - name: nginx-html
+      mountPath: /usr/share/nginx/html
+  volumes:
+  - name: nginx-html
+    emptyDir: {}
+
+Apply it:
+
+k apply -f nginx-volume-pod.yaml
+
+
+	2.	Verify the Volume:
+Check the pod’s status:
+
+k get po
+
+(po = pods)
+Enter the pod and confirm the volume exists:
+
+k exec -it nginx-volume-pod -- ls /usr/share/nginx/html
+
+
+	3.	Clean Up:
+
+k delete -f nginx-volume-pod.yaml
+
+Step 2: PersistentVolumes and PersistentVolumeClaims
+	1.	Create a PersistentVolume:
+Save the following YAML as pv-local.yaml:
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-local
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: /tmp/pv-data
+
+Apply it:
+
+k apply -f pv-local.yaml
+
+
+	2.	Create a PersistentVolumeClaim:
+Save this YAML as pvc-local.yaml:
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-local
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 500Mi
+
+Apply it:
+
+k apply -f pvc-local.yaml
+
+
+	3.	Verify the Claim:
+
+k get pv
+k get pvc
+
+(pv = persistent volumes, pvc = persistent volume claims)
+
+	4.	Use the PVC in a Pod:
+Save the following YAML as nginx-pvc-pod.yaml:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pvc-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    volumeMounts:
+    - name: nginx-data
+      mountPath: /usr/share/nginx/html
+  volumes:
+  - name: nginx-data
+    persistentVolumeClaim:
+      claimName: pvc-local
+
+Apply it:
+
+k apply -f nginx-pvc-pod.yaml
+
+
+	5.	Verify the PVC Usage:
+
+k exec -it nginx-pvc-pod -- touch /usr/share/nginx/html/testfile
+k exec -it nginx-pvc-pod -- ls /usr/share/nginx/html
+
+
+	6.	Clean Up:
+
+k delete -f nginx-pvc-pod.yaml
+k delete -f pvc-local.yaml
+k delete -f pv-local.yaml
+
+Step 3: Secrets
+	1.	Create a Secret:
+
+k create secret generic db-secret --from-literal=username=admin --from-literal=password=pass123
+k get secrets
+k describe secret db-secret
+
+
+	2.	Use the Secret in a Pod:
+Save the following YAML as nginx-secret-pod.yaml:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-secret-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    env:
+    - name: DB_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: username
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: password
+
+Apply it:
+
+k apply -f nginx-secret-pod.yaml
+
+
+	3.	Verify the Secret:
+
+k exec -it nginx-secret-pod -- env | grep DB
+
+
+	4.	Clean Up:
+
+k delete -f nginx-secret-pod.yaml
+k delete secret db-secret
+
+Day 4 Checklist
+
+✅ Worked with Volumes and mounted them into pods.
+✅ Practiced creating and using PersistentVolumes and PersistentVolumeClaims.
+✅ Created and used Secrets securely in pods.
+
+Let me know when you’re ready for Day 5! 🚀
