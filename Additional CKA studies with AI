@@ -322,3 +322,215 @@ Day 2 Checklist
 ✅ Worked with node affinity and taints/tolerations.
 
 Let me know how it goes! 🚀
+
+------------
+
+Day 3: Services, Networking, and ConfigMaps
+
+Goals for Today
+	1.	Understand and work with Kubernetes Services (ClusterIP, NodePort, and LoadBalancer).
+	2.	Explore how to use ConfigMaps to manage application configuration.
+	3.	Practice debugging and troubleshooting pods and services.
+
+Step 1: Expose a Deployment Using a Service
+	1.	Create a Deployment:
+Save the following YAML as nginx-deployment-service.yaml:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+Apply it:
+
+kubectl apply -f nginx-deployment-service.yaml
+
+
+	2.	Create a ClusterIP Service:
+Save the following YAML as nginx-clusterip.yaml:
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-clusterip
+spec:
+  selector:
+    app: nginx
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
+
+Apply it:
+
+kubectl apply -f nginx-clusterip.yaml
+
+
+	3.	Verify the Service:
+
+kubectl get svc
+kubectl describe svc nginx-clusterip
+kubectl get endpoints
+
+
+	4.	Access the Service (Inside the Cluster):
+Use a debug pod:
+
+kubectl run debug-pod --rm -it --image=busybox -- /bin/sh
+wget -qO- http://nginx-clusterip
+
+
+	5.	Clean Up:
+
+kubectl delete -f nginx-deployment-service.yaml
+kubectl delete -f nginx-clusterip.yaml
+
+Step 2: NodePort Service
+	1.	Modify the Service Type:
+Save the following YAML as nginx-nodeport.yaml:
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-nodeport
+spec:
+  selector:
+    app: nginx
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 30007
+  type: NodePort
+
+Apply it:
+
+kubectl apply -f nginx-nodeport.yaml
+
+
+	2.	Access the Service:
+Find your cluster node’s IP and access the service:
+
+kubectl get nodes -o wide
+curl http://<node-ip>:30007
+
+
+	3.	Clean Up:
+
+kubectl delete -f nginx-nodeport.yaml
+
+Step 3: ConfigMaps
+	1.	Create a ConfigMap:
+
+kubectl create configmap nginx-config --from-literal=env=production
+kubectl get configmaps
+kubectl describe configmap nginx-config
+
+
+	2.	Use ConfigMap in a Pod:
+Save the following YAML as nginx-configmap-pod.yaml:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-configmap
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    env:
+    - name: ENV
+      valueFrom:
+        configMapKeyRef:
+          name: nginx-config
+          key: env
+
+Apply it:
+
+kubectl apply -f nginx-configmap-pod.yaml
+kubectl exec -it nginx-configmap -- env | grep ENV
+
+
+	3.	Clean Up:
+
+kubectl delete -f nginx-configmap-pod.yaml
+kubectl delete configmap nginx-config
+
+Step 4: Debugging Pods and Services
+	1.	Troubleshooting Pods:
+Create a faulty pod:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: faulty-pod
+spec:
+  containers:
+  - name: nginx
+    image: nginx:nonexistent
+
+Apply it:
+
+kubectl apply -f faulty-pod.yaml
+kubectl get pods
+kubectl describe pod faulty-pod
+kubectl logs faulty-pod
+
+
+	2.	Clean Up:
+
+kubectl delete -f faulty-pod.yaml
+
+Step 5: Practice with LoadBalancer Service (Optional)
+
+If your environment supports LoadBalancer (e.g., cloud providers or minikube with add-ons):
+	1.	Modify the service:
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-loadbalancer
+spec:
+  selector:
+    app: nginx
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
+
+Apply it and verify:
+
+kubectl apply -f nginx-loadbalancer.yaml
+kubectl get svc
+
+
+	2.	Clean Up:
+
+kubectl delete -f nginx-loadbalancer.yaml
+
+Day 3 Checklist
+
+✅ Created and managed ClusterIP, NodePort, and LoadBalancer Services.
+✅ Practiced ConfigMaps for managing configuration.
+✅ Debugged a faulty pod.
+
+Let me know how you did and if you’re ready for Day 4!
+
+--------------------
