@@ -717,3 +717,158 @@ Day 4 Checklist
 ✅ Created and used Secrets securely in pods.
 
 Let me know when you’re ready for Day 5! 🚀
+
+----------
+
+Day 5: Deployments, Rolling Updates, and DaemonSets
+
+Goals for Today
+	1.	Understand how to work with Kubernetes Deployments.
+	2.	Perform rolling updates and rollbacks.
+	3.	Learn about DaemonSets and when to use them.
+
+Step 1: Create and Manage Deployments
+	1.	Create a Deployment:
+Save the following YAML as nginx-deployment.yaml:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.21.6
+        ports:
+        - containerPort: 80
+
+Apply it:
+
+k apply -f nginx-deployment.yaml
+
+
+	2.	Verify the Deployment:
+
+k get deploy
+k get rs
+k get po
+
+(deploy = deployment, rs = replica set, po = pods)
+
+	3.	Access the Pods via a Service:
+Create a Service to expose the deployment:
+
+k expose deploy nginx-deployment --type=ClusterIP --port=80 --target-port=80
+k get svc
+
+Test the service inside the cluster:
+
+k run test-pod --rm -it --image=busybox -- /bin/sh
+wget -qO- http://nginx-deployment
+
+
+	4.	Clean Up:
+
+k delete svc nginx-deployment
+
+Step 2: Perform a Rolling Update
+	1.	Update the Deployment:
+
+k set image deploy/nginx-deployment nginx=nginx:1.23.1
+
+
+	2.	Verify the Update:
+
+k rollout status deploy/nginx-deployment
+k describe deploy nginx-deployment
+k get rs
+k get po
+
+
+	3.	Rollback the Update:
+
+k rollout undo deploy/nginx-deployment
+
+
+	4.	Verify the Rollback:
+
+k get rs
+k get po
+k describe deploy nginx-deployment
+
+Step 3: Working with DaemonSets
+	1.	Create a DaemonSet:
+Save the following YAML as daemonset-example.yaml:
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: daemonset-example
+spec:
+  selector:
+    matchLabels:
+      app: example-daemon
+  template:
+    metadata:
+      labels:
+        app: example-daemon
+    spec:
+      containers:
+      - name: daemon-container
+        image: busybox
+        command: ["sh", "-c", "while true; do echo Hello from DaemonSet; sleep 30; done"]
+
+Apply it:
+
+k apply -f daemonset-example.yaml
+
+
+	2.	Verify the DaemonSet:
+
+k get ds
+k get po -o wide
+
+(ds = daemon set)
+
+	3.	Check Logs from a Daemon Pod:
+
+k logs <pod-name>
+
+
+	4.	Clean Up:
+
+k delete -f daemonset-example.yaml
+
+Step 4: Practice Exam-Like Scenario
+
+Scenario:
+You are tasked with the following:
+	1.	Create a deployment named web-app with 4 replicas using the nginx:1.21.6 image.
+	2.	Expose the deployment as a NodePort service on port 30008.
+	3.	Update the deployment to use the image nginx:1.23.1.
+	4.	Roll back the deployment to the previous version.
+	5.	Finally, delete the deployment and service.
+
+Commands:
+Try to do this on your own!
+	•	Use k create deploy, k expose, k set image, and k rollout undo for each task.
+
+Day 5 Checklist
+
+✅ Created and managed Deployments.
+✅ Performed rolling updates and rollbacks.
+✅ Learned and practiced using DaemonSets.
+
+Let me know when you’re ready for Day 6!
+
+
+
