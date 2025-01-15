@@ -141,3 +141,164 @@ Let me know when you’re ready for Day 7! 🚀
 
 ---------
 
+Day 7: ConfigMaps, Secrets, and Multi-Container Pods
+
+Goals for Today
+	1.	Understand and use ConfigMaps for application configuration.
+	2.	Work with Secrets to manage sensitive data.
+	3.	Learn how to create and manage multi-container Pods.
+
+Step 1: ConfigMaps
+	1.	Create a ConfigMap:
+Create a ConfigMap from a file:
+Save this to app-config.properties:
+
+APP_NAME=MyApp
+APP_ENV=Production
+
+Create the ConfigMap:
+
+k create configmap app-config --from-file=app-config.properties
+
+
+	2.	View the ConfigMap:
+
+k get cm
+k describe cm app-config
+
+(cm = ConfigMap)
+
+	3.	Use the ConfigMap in a Pod:
+Save this YAML as configmap-pod.yaml:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: configmap-pod
+spec:
+  containers:
+  - name: app-container
+    image: busybox
+    command: ["sh", "-c", "env && sleep 3600"]
+    envFrom:
+    - configMapRef:
+        name: app-config
+
+Apply it:
+
+k apply -f configmap-pod.yaml
+
+
+	4.	Verify ConfigMap Usage:
+
+k exec configmap-pod -- env | grep APP_
+
+
+	5.	Clean Up:
+
+k delete -f configmap-pod.yaml
+k delete cm app-config
+
+Step 2: Secrets
+	1.	Create a Secret:
+
+k create secret generic db-secret --from-literal=username=admin --from-literal=password=secret123
+
+
+	2.	View the Secret (Base64 Encoded):
+
+k get secret db-secret -o yaml
+
+
+	3.	Use the Secret in a Pod:
+Save this YAML as secret-pod.yaml:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: secret-pod
+spec:
+  containers:
+  - name: app-container
+    image: busybox
+    command: ["sh", "-c", "env && sleep 3600"]
+    env:
+    - name: DB_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: username
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: password
+
+Apply it:
+
+k apply -f secret-pod.yaml
+
+
+	4.	Verify Secret Usage:
+
+k exec secret-pod -- env | grep DB_
+
+
+	5.	Clean Up:
+
+k delete -f secret-pod.yaml
+k delete secret db-secret
+
+Step 3: Multi-Container Pods
+	1.	Create a Multi-Container Pod:
+Save this YAML as multi-container-pod.yaml:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multi-container-pod
+spec:
+  containers:
+  - name: app-container
+    image: busybox
+    command: ["sh", "-c", "while true; do echo App Container; sleep 5; done"]
+  - name: sidecar-container
+    image: busybox
+    command: ["sh", "-c", "while true; do echo Sidecar Container; sleep 5; done"]
+
+Apply it:
+
+k apply -f multi-container-pod.yaml
+
+
+	2.	Verify the Logs from Both Containers:
+
+k logs multi-container-pod -c app-container
+k logs multi-container-pod -c sidecar-container
+
+(-c specifies the container name in the pod)
+
+	3.	Clean Up:
+
+k delete -f multi-container-pod.yaml
+
+Practice Exam-Like Scenario
+
+Scenario:
+	1.	Create a ConfigMap named app-config with two keys: APP_MODE=debug and LOG_LEVEL=info.
+	2.	Create a Secret named db-credentials with keys: DB_USER=root and DB_PASS=pass123.
+	3.	Create a Pod named config-secret-pod that uses:
+	•	The ConfigMap to set environment variables APP_MODE and LOG_LEVEL.
+	•	The Secret to set environment variables DB_USER and DB_PASS.
+	4.	Verify the environment variables in the Pod.
+
+Commands to Use:
+	•	k create cm, k create secret, k apply, k exec, k delete.
+
+Day 7 Checklist
+
+✅ Created and used ConfigMaps.
+✅ Created and used Secrets.
+✅ Worked with multi-container Pods.
+
+Let me know when you’re ready for Day 8! 🚀
