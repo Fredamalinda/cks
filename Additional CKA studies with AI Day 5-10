@@ -1,0 +1,143 @@
+Day 6: Services, Networking, and Ingress Controllers
+
+Goals for Today
+	1.	Understand Kubernetes Services and their types (ClusterIP, NodePort, LoadBalancer).
+	2.	Work with Ingress controllers to route traffic to different applications.
+	3.	Practice network troubleshooting and DNS in Kubernetes.
+
+Step 1: Kubernetes Services
+	1.	Create a Deployment and Expose it with a ClusterIP Service:
+
+k create deploy web --image=nginx --replicas=2
+k expose deploy web --type=ClusterIP --port=80 --target-port=80
+k get svc
+
+Test the service inside the cluster:
+
+k run curl-pod --rm -it --image=busybox -- /bin/sh
+wget -qO- http://web
+
+
+	2.	Expose the Deployment with a NodePort Service:
+
+k expose deploy web --type=NodePort --port=80 --target-port=80
+k get svc
+
+Note the NodePort assigned (e.g., 30007) and access the service:
+
+curl http://<node-ip>:<node-port>
+
+
+	3.	Clean Up:
+
+k delete svc web
+k delete deploy web
+
+Step 2: Ingress Controllers
+	1.	Install an Ingress Controller:
+For Minikube:
+
+minikube addons enable ingress
+
+For other environments: Install NGINX Ingress Controller using k apply.
+
+k apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+k get po -n ingress-nginx
+
+
+	2.	Create a Basic Ingress Resource:
+Deploy two test applications:
+
+k create deploy app1 --image=nginx --replicas=1
+k expose deploy app1 --port=80 --target-port=80
+k create deploy app2 --image=nginx --replicas=1
+k expose deploy app2 --port=80 --target-port=80
+
+Save this YAML as basic-ingress.yaml:
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: basic-ingress
+spec:
+  rules:
+  - host: app1.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app1
+            port:
+              number: 80
+  - host: app2.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app2
+            port:
+              number: 80
+
+Apply the Ingress:
+
+k apply -f basic-ingress.yaml
+
+
+	3.	Test the Ingress:
+Edit your /etc/hosts file (Linux/Mac) or C:\Windows\System32\drivers\etc\hosts (Windows) and add:
+
+<INGRESS-LOAD-BALANCER-IP> app1.local
+<INGRESS-LOAD-BALANCER-IP> app2.local
+
+Replace <INGRESS-LOAD-BALANCER-IP> with the Ingress controller IP:
+
+k get ingress
+
+Test the endpoints:
+
+curl http://app1.local
+curl http://app2.local
+
+
+	4.	Clean Up:
+
+k delete -f basic-ingress.yaml
+k delete deploy app1 app2
+k delete svc app1 app2
+
+Step 3: Network Troubleshooting and DNS
+	1.	Check DNS Resolution:
+Deploy CoreDNS tools for testing DNS inside the cluster:
+
+k run dns-test --image=busybox:1.28 --rm -it -- /bin/sh
+nslookup kubernetes.default
+
+
+	2.	Check Network Policies (Optional):
+Create a network policy to restrict traffic to a pod and verify it works.
+
+Practice Exam-Like Scenario
+
+Scenario:
+	1.	Deploy an application called my-app with the nginx image and expose it on port 8080 using a NodePort service.
+	2.	Set up an Ingress resource to make the application accessible at my-app.local.
+	3.	Test the Ingress by editing the /etc/hosts file.
+	4.	Clean up all resources afterward.
+
+Commands to Use:
+	•	k create deploy, k expose, k apply, k delete.
+
+Day 6 Checklist
+
+✅ Worked with Kubernetes Services (ClusterIP, NodePort).
+✅ Installed and used Ingress Controllers.
+✅ Practiced network troubleshooting and DNS.
+
+Let me know when you’re ready for Day 7! 🚀
+
+---------
+
